@@ -71,10 +71,5 @@ msg="HAS COMPLETED NORMALLY!"
 echo $msg
 postmsg "$jlogfile" "$msg"
 
-if [ "$KEEPDATA" != "YES" ] ; then
-  cd $DATA_IN
-  rm -rf $WORK
-fi
-
 ############## END OF SCRIPT #######################
 
