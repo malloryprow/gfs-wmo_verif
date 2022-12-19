@@ -1,0 +1,63 @@
+#! /bin/sh
+########################################################################################
+# Name of Script: exwmo_verf_geg_stat_analysis.ecf
+# Purpose of Script: To generate WMO monthly report from MET stat files 
+# Log history:   Binbin Zhou 11-15-2017
+#   
+########################################################################################
+set -x
+
+cd $WORK
+
+#WORK=/ptmpp1/Binbin.Zhou/met/tmpnwprd/wmo_report/stat
+
+yyyy=$1
+mm=$2
+dd=$3
+month=$4
+
+msg="$job HAS BEGUN"
+postmsg "$jlogfile" "$msg"
+
+#for mm in 08 07 06 05 04 03 02 01 ; do
+#################################################################
+# Run MET Stat-analysis to get statistic data file 
+#################################################################
+
+$USHverf_g2g/wmo_verf_g2g_get_sal1l2_sl1l2.sh $yyyy $mm $dd $month
+
+#################################################################
+# Run Perl script to get WMO monthly report
+#################################################################
+
+if [ $month = "no" ] ; then
+ for hh in 00 12 ; do
+   $USHverf_g2g/wmo_verf_g2g_get_sal1l2_sl1l2_daily.pl $yyyy $mm $dd $hh $WORK/stat > $WORK/wmo_report_${yyyy}${mm}${dd}.${hh}Z
+   cp $WORK/wmo_report_${yyyy}${mm}${dd}.${hh}Z $COMMET/wmo_report_${yyyy}/.
+ done
+fi
+
+if [ $month = "yes" ] ; then
+ for hh in 00 12 ; do
+   $USHverf_g2g/wmo_verf_g2g_get_sal1l2_sl1l2.pl $yyyy $mm $hh $WORK/stat > $WORK/wmo_report_${yyyy}${mm}.${hh}Z
+   cp $WORK/wmo_report_${yyyy}${mm}.${hh}Z $COMMET/wmo_report_${yyyy}/.
+ done
+fi 
+
+
+
+#done 
+
+#####################################################################
+# GOOD RUN
+set +x
+echo "**************$job COMPLETED NORMALLY on `date`"
+set -x
+#####################################################################
+
+msg="HAS COMPLETED NORMALLY!"
+echo $msg
+postmsg "$jlogfile" "$msg"
+
+############## END OF SCRIPT #######################
+

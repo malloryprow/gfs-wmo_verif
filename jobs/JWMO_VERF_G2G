@@ -1,0 +1,184 @@
+#!/bin/sh
+set -x
+
+#################################################################
+# J-job script for WMO GFS verification
+#################################################################
+export RUN_ENVIR=${RUN_ENVIR:-prod}
+export SENDECF=${SENDECF:-YES}
+
+###############################
+# Specify RUN name
+###############################
+export NET=verf
+export RUN=gfs
+
+###############################################################
+# This block can be modified for different Production test
+# environment. This is used for operational testings
+###############################################################
+if [ "$RUN_ENVIR" = prod -o "$RUN_ENVIR" = para ] ; then
+  if [ $envir != "prod" ] ; then
+    export SENDDBN=${SENDDBN:-NO}
+    export jlogfile=${jlogfile:-${COMROOT}/logs}
+    export DBNROOT=${UTILROOT}/fakedbn
+    export DBNLOG=${DBNLOG:-YES}
+    export DATA_IN=${DATA_IN:-${OPSROOT}/tmp}
+  fi
+fi
+
+#####################################################################################
+# This block is for Developer's test run:
+# Run config file to get input parameters
+# This config file should define the following variables
+# DATA_IN: Location of working directory, default to /tmpnwprd
+# SENDECF: If the job is to be running using ECF, default to YES
+# SENDDBN: Set to NO for developers, default to YES
+# COM_IN:  Directory for input files, default to /com/$NET/${envir}
+# COM_OUT: Directory for output file, default to /com/$NET/${envir}
+# gespath: Directory for the guess or restart files, default to /nwges/${envir}
+#####################################################################################
+if [ "$RUN_ENVIR" = dev ]    ### For Developers
+then
+  . $HOMEEMC_verif_wmo_gfs/parm/wmo_verf_g2g_dev_envr
+else
+  export COMGFS=${COMROOT}/gfs/${gfs_ver}/gfs
+  export COMGFSANL=${COMROOT}/gfs/${gfs_ver}/gdas
+fi
+
+#if [ $SENDECF = YES ]
+#then
+#  ecflow_client --init=${ECF_RID}
+#fi
+#
+# ###################################
+# SET SHELL PROCESSING VARIABLES
+# ###################################
+export PS4='$SECONDS + '
+date
+
+###########################################################
+# obtain unique process id (pid) and make temp directories
+###########################################################
+export pid=$$
+export DATA_IN=${DATA_IN:-${OPSROOT}/tmp}
+export WORK=$DATA_IN/wmo_verf_g2g_${envir}.$$
+
+rm -rf $WORK
+mkdir -p $WORK
+cd $WORK
+
+####################################
+# File To Log Msgs
+####################################
+export jlogfile=${jlogfile:-${COMROOT}/logs/jlogfiles/jlogfile.$$}
+
+####################################
+# Determine Job Output Name on System
+####################################
+export outid="LL$job"
+export jobid="${outid}.o${pid}"
+export pgmout="OUTPUT.${pid}"
+
+export cycle=t${cyc}z
+
+##################################################
+# SAVEGES  - Copy Files From TMPDIR to $GESdir
+# SENDECF  - Flag Events on ECF
+# SENDCOM  - Copy Files From TMPDIR to $COMOUT
+# SENDDBN  - Issue DBNet Client Calls
+##################################################
+export SENDCOM=${SENDCOM:-YES}
+export SENDDBN=${SENDDBN:-YES}
+export SENDECF=${SENDECF:-YES}
+
+export HOMEverf_g2g=${HOMEverf_g2g:-${OPSROOT}/${envir}/packages/wmo_verf_g2g.${wmo_verf_gfs_ver}}
+export EXECverf_g2g=${EXECverf_g2g:-$HOMEverf_g2g/exec}
+export FIXverf_g2g=${FIXverf_g2g:-$HOMEverf_g2g/fix}
+export SCRIPTSverf_g2g=${SCRIPTSverf_g2g:-$HOMEverf_g2g/scripts}
+export PARMverf_g2g=${PARMverf_g2g:-$HOMEverf_g2g/parm}
+export USHverf_g2g=${USHverf_g2g:-$HOMEverf_g2g/ush}
+export CLIM=${CLIM:-$HOMEverf_g2g/fix/clim_1.5d}
+
+###################################
+# Set up the UTILITIES
+###################################
+export utilscript=${UTILROOT}/ush
+export utilexec=${UTILROOT}/exec
+export EXECutil=${utilexec}
+
+# Run setup to initialize working directory and utility scripts
+#sh $utilscript/setup.sh
+
+# Run setpdy and initialize PDY variables
+export PDY=${vday:-`date +%Y%m%d`}
+sh $utilscript/setpdy.sh
+. $WORK/PDY
+
+export vday=${vday:-`date +%Y%m%d`} 
+
+##################################
+# Define model input COMIN
+##################################
+#. $PARMverf_g2g/wmo_verf_g2g_dev_envr
+
+##################################
+# Define COMIN/COMOUT variables
+##################################
+export COM_IN=${COM_IN:-/lfs/h1/ops/${envir}/com/verf/${wmo_verf_gfs_ver}}
+export COM_OUT=${COM_OUT:-/lfs/h1/ops/${envir}/com/verf/${wmo_verf_gfs_ver}}
+
+export FCSTDIR=${FCSTDIR:-$COM_OUT/${RUN}}
+export OBSVDIR=${OBSVDIR:-$COM_OUT/${RUN}}
+
+export COMIN=$COM_IN/${RUN}.$vday
+export COMOUT=$COM_OUT/${RUN}.$vday
+export COMMET=${COMMET:-/lfs/h1/ops/${envir}/com/met/${wmo_verf_gfs_ver}}
+
+mkdir -p -m 775 $COMOUT $COMMET/wmo_report_${vday:0:4}
+
+env
+#######################################################################
+# Execute the script.
+
+export get_data=${get_data:-yes}
+export report_just=${report_just:-no} 
+#export mon_rep=${mon_rep:-yes}
+if [ $report_just = 'no' ] ; then
+ sh $HOMEverf_g2g/scripts/exwmo_verf_g2g.ecf $vday
+fi
+#if [ ${vday:6:2} = '01' ] && [ $mon_rep = "yes" ] ; then
+if [ ${vday:6:2} = '01' ] ; then
+    year=${vday:0:4}
+    mon=${vday:4:2}
+    
+    mon_digit1=$(echo $mon |cut -c 1-1)
+    if [ $mon_digit1 = 0 ]; then
+        mon_digit=$(echo $mon |cut -c 2-2)
+    else
+        mon_digit=$mon
+    fi
+    mon_1=$((mon_digit-1))
+    #mon_1=$((mon-1))
+    #typeset -Z2 mon_1
+    [[ $mon_1 -lt 10 ]] && mon_1=0$mon_1
+
+  if [ $mon = '01' ] ; then
+    year=$((year-1))
+    mon_1=12
+  fi
+
+  sh $HOMEverf_g2g/scripts/exwmo_verf_g2g_report.ecf $year $mon_1 00 yes  
+  echo $year $mon_1 
+  $HOMEverf_g2g/ush/wmo_verf_combine_all.sh $year $mon_1 
+
+fi  
+
+#if [ $mon_rep = 'no' ] ; then
+ sh $HOMEverf_g2g/scripts/exwmo_verf_g2g_report.ecf ${vday:0:4} ${vday:4:2} ${vday:6:2} no 
+#fi 
+
+msg="JOB $job HAS COMPLETED NORMALLY."
+postmsg "$jlogfile" "$msg"
+
+
