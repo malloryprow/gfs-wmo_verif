@@ -1,0 +1,75 @@
+#! /bin/sh
+########################################################################################
+# Name of Script: exwmo_verf_g2g.ecf
+# Purpose of Script: To generate the verification products for the g2g verification
+# Arguments: exwmo_verf_g2g.sh.ecf $yyyy$mm$dd
+# Log history:   Binbin Zhou 8-25-2017
+#                Mallory Row 10-15-2021
+#   
+########################################################################################
+set -x
+
+cd $WORK
+
+echo "$0 STRDATE "`date`
+
+msg="$job HAS BEGUN"
+postmsg "$jlogfile" "$msg"
+
+export vday=$1
+
+just_met='yes'
+# Copy the model info file which contains what model data are to be verified
+
+###############################################
+# Get the GFS analysis and climatology  data 
+################################################
+
+if [ $get_data = 'yes' ] ; then
+
+   $USHverf_g2g/check_history_data.sh
+   if [ -d $COMGFSANL.$vday ] ; then
+     $USHverf_g2g/wmo_verf_g2g_get.sh gfsanl $vday
+   else
+     $USHverf_g2g/wmo_verf_g2g_get_HPSS.sh gfsanl $vday
+   fi
+   $USHverf_g2g/wmo_verf_g2g_get.sh clim $vday
+
+fi
+
+#Copy modelinfor and config files
+cp $PARMverf_g2g/wmo_verf_g2g.modelinfo modelinfo
+cp $PARMverf_g2g/wmo_verf_g2g_config config
+cp $PARMverf_g2g/wmo_verf_g2g_config.noAC config.noAC
+cp $PARMverf_g2g/*.nc . 
+
+cat modelinfo |while read line
+do
+
+  vmodel=`echo $line |awk -F"|" '{print $1}'` 
+
+if [ $get_data = 'yes' ] ; then
+  # Get the input model data
+ if [ -d $COMGFS.$vday ] ; then
+   $USHverf_g2g/wmo_verf_g2g_get.sh $vmodel $vday 
+ else
+   $USHverf_g2g/wmo_verf_g2g_get_HPSS.sh $vmodel $vday
+ fi
+
+fi 
+  $USHverf_g2g/wmo_verf_g2g_run.sh $vday $vmodel 
+done
+
+#####################################################################
+# GOOD RUN
+set +x
+echo "**************$job COMPLETED NORMALLY on `date`"
+set -x
+#####################################################################
+
+msg="HAS COMPLETED NORMALLY!"
+echo $msg
+postmsg "$jlogfile" "$msg"
+
+############## END OF SCRIPT #######################
+

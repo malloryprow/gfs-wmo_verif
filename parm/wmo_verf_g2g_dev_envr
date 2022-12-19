@@ -1,0 +1,25 @@
+##################################################################
+# This parameter file set up the environment variables used in
+# the J-Job scripts to run the grid2grid verifications
+##################################################################
+export COMGFS=${COMROOT}/gfs/${gfs_ver}/gfs
+export COMGFSANL=${COMROOT}/gfs/${gfs_ver}/gdas
+export CLIM=${HOMEEMC_verif_wmo_gfs}/fix/clim_1.5d
+
+export HOMEverf_g2g=$HOMEEMC_verif_wmo_gfs
+export EXECverf_g2g=${HOMEverf_g2g}/exec
+export PARMverf_g2g=${HOMEverf_g2g}/parm
+export USHverf_g2g=${HOMEverf_g2g}/ush
+export FIXverf_g2g=${HOMEverf_g2g}/fix
+
+export COM_IN=${COM_IN:-/lfs/h2/emc/ptmp/$USER/emc_verif_wmo_gfs/g2g/WMO/com/verf/dev}
+export COM_OUT=${COM_OUT:-/lfs/h2/emc/ptmp/$USER/emc_verif_wmo_gfs/g2g/WMO/com/verf/dev}
+export COMMET=${COMMET:-/lfs/h2/emc/vpppg/noscrub/$USER/verification/global/archive/WMO/com/verf/dev/met_test}
+
+export DATA_IN=${DATA_IN:-/lfs/h2/emc/ptmp/$USER/emc_verif_wmo_gfs/g2g/RFC2/tmpnwprd}
+export jlogfile=${DATA_IN}/jlogfile
+
+export SENDCOM=${SENDCOM:-YES}
+export SENDECF=${SENDECF:-NO}
+export SENDDBN=${SENDDBN:-NO}
+
