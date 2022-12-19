@@ -178,6 +178,6 @@ grid_weight_flag = COS_LAT;
 rank_corr_flag = FALSE;
 tmp_dir        = "${WORK}";
 output_prefix  = "${MODEL}_F${fhr}_noAC";
-version        = "V9.1";
+version        = "V10.1";
 
 ////////////////////////////////////////////////////////////////////////////////
