@@ -46,6 +46,7 @@ export mon_rep=no
 
 export get_data=yes
 
+export KEEPDATA=NO
 export COM_IN=/lfs/h2/emc/ptmp/$USER/output_crons/emc_verif_wmo_gfs/g2g/WMO/com/verf/dev
 export COM_OUT=/lfs/h2/emc/ptmp/$USER/output_crons/emc_verif_wmo_gfs/g2g/WMO/com/verf/dev
 export COMMET=/lfs/h2/emc/vpppg/noscrub/$USER/verification/global/archive/wmo_data/com/verf/dev/met_test

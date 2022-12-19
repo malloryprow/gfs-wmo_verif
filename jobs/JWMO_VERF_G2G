@@ -87,10 +87,12 @@ export cycle=t${cyc}z
 # SENDECF  - Flag Events on ECF
 # SENDCOM  - Copy Files From TMPDIR to $COMOUT
 # SENDDBN  - Issue DBNet Client Calls
+# KEEPDATA - keep working directory
 ##################################################
 export SENDCOM=${SENDCOM:-YES}
 export SENDDBN=${SENDDBN:-YES}
 export SENDECF=${SENDECF:-YES}
+export KEEPDATA=${KEEPDATA:-NO}
 
 export HOMEverf_g2g=${HOMEverf_g2g:-${OPSROOT}/${envir}/packages/wmo_verf_g2g.${wmo_verf_gfs_ver}}
 export EXECverf_g2g=${EXECverf_g2g:-$HOMEverf_g2g/exec}
